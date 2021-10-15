@@ -1,4 +1,4 @@
-const dataSource = 'https://s5.ssl.qhres.com/static/b0695e2dd30daa64.json';
+const dataSource = 'https://s5.ssl.qhres2.com/static/b0695e2dd30daa64.json';
 
 (async function () {
 	const data = await (await fetch(dataSource)).json();
