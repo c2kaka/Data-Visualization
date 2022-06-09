@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			canvas {
+				width: 800px;
+				height: 800px;
+			}
+		</style>
+	</head>
+	<body>
+		<canvas width="1600" height="1600" id="canvas"></canvas>
+	</body>
+	<script>
+		function drawPolygon(x, y, r, n) {
+			/** step1: create webgl context **/
+			const canvas = document.getElementById('canvas');
+			const gl = canvas.getContext('webgl');
+
+			/** step2: create webgl program(shader) **/
+			const vertex = `
+            attribute vec2 position;
+
+            void main() {
+                gl_PointSize = 1.0;
+                gl_Position = vec4(position, 1.0, 1.0);
+            }
+        `;
+
+			const fragment = `
+            precision mediump float;
+
+            void main() {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            }
+        `;
+
+			// create shader object
+			const vertexShader = gl.createShader(gl.VERTEX_SHADER);
+			gl.shaderSource(vertexShader, vertex);
+			gl.compileShader(vertexShader);
+
+			const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+			gl.shaderSource(fragmentShader, fragment);
+			gl.compileShader(fragmentShader);
+
+			// create program object
+			const program = gl.createProgram();
+			gl.attachShader(program, vertexShader);
+			gl.attachShader(program, fragmentShader);
+			gl.linkProgram(program);
+
+			// use program object
+			gl.useProgram(program);
+
+			/** step3: put data into webgl buffer area **/
+			// const points = new Float32Array([-1, -1, 0, 1, 1, -1]);
+			const points = getPolygonPoints(x, y, r, n);
+
+			const bufferId = gl.createBuffer();
+			gl.bindBuffer(gl.ARRAY_BUFFER, bufferId);
+			gl.bufferData(gl.ARRAY_BUFFER, points, gl.STATIC_DRAW);
+
+			/** step4: gpu read buffer data **/
+			const vPosition = gl.getAttribLocation(program, 'position'); // 获取顶点着色器中的position变量的地址
+			gl.vertexAttribPointer(vPosition, 2, gl.FLOAT, false, 0, 0); //给变量设置长度和类型
+			gl.enableVertexAttribArray(vPosition); //激活这个变量
+
+			/** step5: draw **/
+			gl.clear(gl.COLOR_BUFFER_BIT);
+			gl.drawArrays(gl.TRIANGLE_FAN, 0, points.length / 2);
+		}
+
+		function getPolygonPoints(x, y, r, n) {
+			const sin = Math.sin;
+			const cos = Math.cos;
+			const perAngel = (2 * Math.PI) / n;
+			const positionArray = [];
+			for (let i = 0; i < n; i++) {
+				const angel = i * perAngel;
+				const nx = x + r * cos(angel);
+				const ny = y + r * sin(angel);
+				positionArray.push(nx, ny);
+			}
+			return new Float32Array(positionArray);
+		}
+
+		drawPolygon(0, 0, 0.5, 4);
+	</script>
+</html>
